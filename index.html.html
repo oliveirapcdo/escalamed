@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EscalaMed — InCor</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:12px;background:#f0eee8;}
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:176px;background:#1a3a5c;display:flex;flex-direction:column;flex-shrink:0;}
+.sb-logo{padding:16px 14px 12px;border-bottom:0.5px solid rgba(255,255,255,0.1);}
+.sb-logo h1{color:#fff;font-size:14px;font-weight:600;letter-spacing:-.2px;}
+.sb-logo p{color:rgba(255,255,255,0.4);font-size:10px;margin-top:3px;}
+.sb-section{padding:14px 14px 4px;color:rgba(255,255,255,0.28);font-size:9px;letter-spacing:.08em;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 14px;color:rgba(255,255,255,0.58);font-size:12px;cursor:pointer;border-left:2px solid transparent;}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,0.07);}
+.nav-item.active{color:#fff;background:rgba(255,255,255,0.12);border-left:2px solid #60a5fa;}
+.nav-badge{background:#dc2626;color:#fff;font-size:9px;padding:1px 5px;border-radius:20px;margin-left:auto;}
+.sb-footer{margin-top:auto;padding:12px 14px;border-top:0.5px solid rgba(255,255,255,0.08);font-size:10px;color:rgba(255,255,255,0.3);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#fff;}
+.topbar{padding:10px 18px;border-bottom:0.5px solid #e2e0db;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff;}
+.topbar-title{font-size:14px;font-weight:500;color:#111;}
+.topbar-actions{display:flex;gap:6px;}
+.btn{padding:6px 13px;border-radius:7px;font-size:12px;cursor:pointer;border:0.5px solid #d4d2cd;background:#fff;color:#333;display:inline-flex;align-items:center;gap:5px;}
+.btn:hover{background:#f5f4f0;}
+.btn-primary{background:#1a3a5c;color:#fff;border-color:#1a3a5c;}
+.btn-primary:hover{background:#2563a8;}
+.content{flex:1;overflow-y:auto;padding:16px 18px;}
+
+/* VIEWS */
+.view{display:none;}.view.active{display:block;}
+
+/* SUMMARY */
+.sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.sum-card{background:#f8f7f4;border-radius:8px;padding:10px 12px;border:0.5px solid #e8e6e0;}
+.sum-card .lbl{font-size:10px;color:#777;margin-bottom:3px;}
+.sum-card .val{font-size:22px;font-weight:500;color:#111;}
+.sum-card .sub{font-size:10px;color:#999;margin-top:1px;}
+
+/* CAL NAV */
+.cal-nav-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.month-nav{display:flex;align-items:center;gap:6px;}
+.month-label{font-size:13px;font-weight:500;color:#111;min-width:126px;text-align:center;}
+.btn-icon{width:26px;height:26px;border:0.5px solid #d4d2cd;border-radius:6px;background:#fff;color:#555;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:16px;line-height:1;padding:0;}
+.btn-icon:hover{background:#f5f4f0;}
+.unit-tabs{display:flex;gap:4px;}
+.utab{padding:5px 13px;border-radius:20px;font-size:11px;cursor:pointer;border:0.5px solid #d4d2cd;color:#666;background:#fff;}
+.utab.active{background:#1a3a5c;color:#fff;border-color:#1a3a5c;}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+.leg-item{display:flex;align-items:center;gap:3px;font-size:10px;color:#666;}
+.leg-dot{width:10px;height:10px;border-radius:2px;}
+
+/* TABELA ESCALA */
+.tbl-wrap{overflow-x:auto;border:0.5px solid #e2e0db;border-radius:8px;margin-bottom:16px;}
+table.cal{border-collapse:collapse;table-layout:fixed;width:100%;}
+table.cal thead th{padding:4px 2px;text-align:center;font-size:9px;font-weight:500;color:#666;border-right:0.5px solid #e2e0db;border-bottom:0.5px solid #e2e0db;background:#f8f7f4;white-space:nowrap;width:52px;}
+table.cal thead th.th-label-grupo{text-align:left;padding-left:8px;width:70px;position:sticky;left:0;z-index:3;background:#f8f7f4;}
+table.cal thead th.th-label-turno{width:24px;position:sticky;left:70px;z-index:3;background:#f8f7f4;}
+table.cal thead th.wk{background:#f2f0ea;}
+table.cal thead th .dn{font-size:8px;color:#999;display:block;}
+table.cal thead th .dd{font-size:11px;font-weight:600;color:#222;}
+table.cal thead th.today-col .dd{color:#2563a8;}
+
+table.cal tbody td{padding:0;border-right:0.5px solid #e2e0db;border-bottom:0.5px solid #e2e0db;vertical-align:middle;}
+table.cal tbody tr.row-sep td{border-bottom:1.5px solid #c8c6c0;}
+table.cal tbody td.td-grupo{background:#f8f7f4;padding:3px 6px;white-space:nowrap;position:sticky;left:0;z-index:2;border-right:0.5px solid #d4d2cd;width:70px;}
+table.cal tbody td.td-turno{background:#f8f7f4;padding:2px 3px;position:sticky;left:70px;z-index:2;border-right:1px solid #d4d2cd;width:24px;text-align:center;}
+table.cal tbody td.wk{background:#fafaf8;}
+table.cal tbody td.vazio-cell{background:#fff7ed;}
+
+.row-group-lbl{font-size:10px;font-weight:500;color:#333;}
+.turno-tag{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;font-size:8px;font-weight:600;}
+.tt-M{background:#dbeafe;color:#1e40af;}
+.tt-T{background:#dcfce7;color:#15803d;}
+.tt-N{background:#ede9fe;color:#5b21b6;}
+
+.cell-btn{display:block;width:100%;min-height:24px;padding:2px 3px;cursor:pointer;background:transparent;border:none;text-align:left;}
+.cell-btn:hover{background:#f0f0f0;}
+.cell-btn.today-cell{background:#eff6ff;}
+.cell-btn.today-cell:hover{background:#dbeafe;}
+.nome-pill{display:flex;align-items:center;justify-content:space-between;font-size:10px;padding:2px 4px;border-radius:3px;line-height:1.3;max-width:100%;cursor:pointer;position:relative;}
+.nome-pill span.nm{overflow:hidden;text-overflow:ellipsis;white-space:normal;word-break:break-word;flex:1;}
+.nome-pill:hover{filter:brightness(0.93);}
+.nome-pill .rm-tooltip{display:none;position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;font-size:9px;padding:3px 7px;border-radius:5px;white-space:nowrap;z-index:10;pointer-events:none;}
+.nome-pill:hover .rm-tooltip{display:block;}
+.empty-ind{width:100%;min-height:20px;background:repeating-linear-gradient(135deg,#fff7ed,#fff7ed 3px,#fed7aa 3px,#fed7aa 6px);border-radius:2px;display:flex;align-items:center;justify-content:center;}
+.empty-ind::after{content:"";display:block;width:6px;height:6px;border-radius:50%;background:#f97316;}
+
+/* ALERTAS */
+.alert-banner{display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:8px;margin-bottom:10px;font-size:11px;}
+.alert-ok{background:#f0fdf4;border:0.5px solid #86efac;color:#15803d;}
+.alert-warn{background:#fff7ed;border:0.5px solid #fdba74;color:#9a3412;}
+.alert-item{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:6px;font-size:11px;margin-bottom:4px;cursor:pointer;}
+.alert-item.fds{background:#fff7ed;border:0.5px solid #fed7aa;color:#9a3412;}
+.alert-item.util{background:#eff6ff;border:0.5px solid #bfdbfe;color:#1e40af;}
+.alert-item:hover{filter:brightness(0.97);}
+
+/* MÉDICOS */
+.search-box{display:flex;align-items:center;gap:6px;padding:7px 11px;border:0.5px solid #d4d2cd;border-radius:8px;background:#f8f7f4;width:240px;margin-bottom:12px;}
+.search-box input{border:none;background:transparent;font-size:12px;color:#111;outline:none;flex:1;}
+.med-list{display:flex;flex-direction:column;gap:6px;}
+.med-card{background:#fff;border:0.5px solid #e2e0db;border-radius:8px;padding:10px 13px;display:flex;align-items:center;gap:10px;}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;}
+.med-name{font-size:12px;font-weight:500;color:#111;}
+.med-sub{font-size:10px;color:#888;}
+.stat-badge{font-size:10px;padding:2px 8px;border-radius:20px;margin-left:auto;white-space:nowrap;}
+.badge-ok{background:#dcfce7;color:#15803d;}
+.badge-q{background:#fef9c3;color:#854d0e;}
+
+
+/* CARGA */
+.carga-table{width:100%;border-collapse:collapse;border:0.5px solid #e2e0db;border-radius:8px;overflow:hidden;}
+.carga-table th{padding:9px 11px;text-align:left;font-size:11px;font-weight:500;color:#666;background:#f8f7f4;border-bottom:0.5px solid #e2e0db;}
+.carga-table td{padding:8px 11px;font-size:11px;border-bottom:0.5px solid #e2e0db;color:#111;}
+.carga-table tr.inc td{background:#fff8f2;}
+.prog-bar{height:5px;background:#e8e6e0;border-radius:20px;overflow:hidden;width:72px;display:inline-block;vertical-align:middle;}
+.prog-fill{height:100%;border-radius:20px;}
+.badge-ok2{background:#dcfce7;color:#15803d;font-size:10px;padding:2px 7px;border-radius:20px;}
+.badge-parc{background:#ffedd5;color:#9a3412;font-size:10px;padding:2px 7px;border-radius:20px;}
+.badge-zero{background:#fee2e2;color:#991b1b;font-size:10px;padding:2px 7px;border-radius:20px;}
+
+/* REL FDS */
+.rel-table{width:100%;border-collapse:collapse;border:0.5px solid #e2e0db;border-radius:8px;overflow:hidden;}
+.rel-table th{padding:9px 11px;text-align:left;font-size:11px;font-weight:500;color:#666;background:#f8f7f4;border-bottom:0.5px solid #e2e0db;}
+.rel-table td{padding:8px 11px;font-size:11px;border-bottom:0.5px solid #e2e0db;color:#111;}
+.rel-table tr.zero td{background:#fff0f0;}
+.rel-table tr.parcial td{background:#fff8f2;}
+
+/* FÉRIAS */
+.ferias-cell{background:#fdf2f8!important;cursor:default!important;}
+.ferias-pill{display:flex;align-items:center;justify-content:center;font-size:8px;padding:2px 3px;border-radius:3px;background:#fce7f3;color:#9d174d;line-height:1.4;font-weight:500;}
+.ferias-list{display:flex;flex-direction:column;gap:8px;}
+.ferias-card{background:#fff;border:0.5px solid #e2e0db;border-radius:8px;padding:11px 13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.ferias-card.ativo{border-color:#f9a8d4;background:#fff5fb;}
+.badge-ferias{background:#fce7f3;color:#9d174d;font-size:10px;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+.badge-inativo{background:#f3f4f6;color:#6b7280;font-size:10px;padding:2px 8px;border-radius:20px;}
+.med-card .btn-edit{opacity:0;transition:opacity .15s;}
+.med-card:hover .btn-edit{opacity:1;}
+
+
+/* CONFIG */
+.cfg-block{border:0.5px solid #e2e0db;border-radius:8px;padding:15px;margin-bottom:12px;max-width:420px;}
+.cfg-title{font-size:12px;font-weight:500;color:#111;margin-bottom:10px;}
+.form-group{margin-bottom:10px;}
+.form-label{font-size:11px;color:#666;display:block;margin-bottom:3px;}
+.form-control{width:100%;padding:7px 10px;border:0.5px solid #d4d2cd;border-radius:7px;font-size:12px;background:#fff;color:#111;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.42);z-index:1000;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:13px;padding:22px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.18);}
+.modal-title{font-size:14px;font-weight:600;color:#111;margin-bottom:3px;}
+.modal-sub{font-size:11px;color:#666;margin-bottom:14px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
+.toast{position:fixed;bottom:20px;right:20px;background:#1e3a5f;color:#fff;padding:10px 16px;border-radius:9px;font-size:12px;display:none;z-index:2000;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
+.toast.show{display:flex;}
+
+@media print{
+  body{background:#fff;}
+  .sidebar,.topbar,.no-print{display:none!important;}
+  .main{display:block;}
+  .content{overflow:visible;padding:0;}
+  .view{display:block!important;}
+  .tbl-wrap{overflow:visible;}
+  table.cal{font-size:8px;min-width:auto!important;}
+  .print-header{display:block!important;}
+  .sum-grid,.cal-nav-row,.legend,.unit-tabs{display:none!important;}
+}
+.print-header{display:none;text-align:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px solid #ccc;}
+.print-header h2{font-size:16px;font-weight:700;}
+.print-header p{font-size:11px;color:#555;margin-top:3px;}
+</style>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDNkqQ6H3fTE5-Ymowrbf9-8C4TShubCV0",
+  authDomain: "escalamed-incor.firebaseapp.com",
+  projectId: "escalamed-incor",
+  storageBucket: "escalamed-incor.firebasestorage.app",
+  messagingSenderId: "482444437596",
+  appId: "1:482444437596:web:cec83ac9b9643ca9dede99",
+  measurementId: "G-0JVTJ8SZ4P"
+};
+
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ---- CHAVE DO DOCUMENTO (um doc por mês) ----
+function docId() { return `escala-${ano}-${mes}`; }
+
+// ---- SALVAR NA NUVEM ----
+async function salvarNuvem() {
+  try {
+    const id = docId();
+    const payload = {
+      mes, ano,
+      escala: JSON.parse(JSON.stringify(escala)),
+      ferias: JSON.parse(JSON.stringify(ferias)),
+      medicos: JSON.parse(JSON.stringify(MEDICOS)),
+      updatedAt: new Date().toISOString()
+    };
+    await setDoc(doc(db, 'escalas', id), payload);
+    mostrarSync('☁️ Salvo na nuvem');
+  } catch(e) {
+    mostrarSync('⚠️ Erro ao salvar: ' + e.message, true);
+    console.error(e);
+  }
+}
+
+// ---- CARREGAR DA NUVEM ----
+async function carregarNuvem(m, a) {
+  try {
+    const id = `escala-${a}-${m}`;
+    const snap = await getDoc(doc(db, 'escalas', id));
+    if (snap.exists()) {
+      const d = snap.data();
+      aplicarDados(d);
+      mostrarSync('☁️ Carregado da nuvem');
+    } else {
+      mostrarSync('📋 Mês sem dados na nuvem ainda');
+    }
+  } catch(e) {
+    mostrarSync('⚠️ Erro ao carregar: ' + e.message, true);
+    console.error(e);
+  }
+}
+
+// ---- LISTENER TEMPO REAL ----
+let unsubscribe = null;
+function escutarNuvem() {
+  if (unsubscribe) unsubscribe();
+  const id = docId();
+  unsubscribe = onSnapshot(doc(db, 'escalas', id), (snap) => {
+    if (snap.exists()) {
+      const d = snap.data();
+      // Só aplica se vier de outra sessão (evita loop)
+      if (d.updatedAt !== window._lastSave) {
+        aplicarDados(d);
+        mostrarSync('🔄 Atualizado em tempo real');
+      }
+    }
+  });
+}
+
+function aplicarDados(d) {
+  // Médicos
+  if (d.medicos && d.medicos.length > 0) {
+    MEDICOS.length = 0;
+    d.medicos.forEach(m => MEDICOS.push(m));
+  }
+  // Escala
+  escala = { rec1: {}, rec2: {} };
+  GR1.forEach(g => { escala.rec1[g] = { M: {}, T: {}, N: {} }; });
+  GR2.forEach(g => { escala.rec2[g] = { M: {}, T: {}, N: {} }; });
+  GR1.forEach(g => {
+    ['M','T','N'].forEach(t => {
+      escala.rec1[g][t] = d.escala?.rec1?.[g]?.[t] || {};
+    });
+  });
+  GR2.forEach(g => {
+    ['M','T','N'].forEach(t => {
+      escala.rec2[g][t] = d.escala?.rec2?.[g]?.[t] || {};
+    });
+  });
+  // Férias
+  ferias = d.ferias || {};
+  // Mês/ano
+  mes = d.mes;
+  ano = d.ano;
+  renderEscala();
+  if (document.getElementById('view-medicos').classList.contains('active')) renderMed(MEDICOS);
+  if (document.getElementById('view-ferias').classList.contains('active')) renderFerias();
+}
+
+function mostrarSync(msg, erro) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = erro ? '#dc2626' : '#15803d';
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; }, 3000);
+}
+
+// ---- EXPÕE FUNÇÕES PARA O APP ----
+window.salvarNuvem = salvarNuvem;
+window.carregarNuvem = carregarNuvem;
+window.escutarNuvem = escutarNuvem;
+
+// ---- INICIA LISTENER QUANDO APP CARREGA ----
+window.addEventListener('escalamed-ready', () => {
+  carregarNuvem(mes, ano).then(() => escutarNuvem());
+});
+</script>
+<style>/* placeholder */
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sb-logo"><h1>EscalaMed</h1><p>InCor HCFMUSP</p></div>
+  <div class="sb-section">Escala</div>
+  <div class="nav-item active" id="nav-escala" onclick="showView('escala')">📅 Escala mensal</div>
+  <div class="nav-item" id="nav-medicos" onclick="showView('medicos')">👥 Médicos</div>
+  <div class="sb-section">Gestão</div>
+  <div class="nav-item" id="nav-alertas" onclick="showView('alertas')">⚠️ Alertas <span class="nav-badge" id="badge-alertas">0</span></div>
+  <div class="nav-item" id="nav-carga" onclick="showView('carga')">📊 Carga horária</div>
+  <div class="nav-item" id="nav-fds" onclick="showView('fds')">📋 Rel. Finais de Semana</div>
+  <div class="nav-item" id="nav-ferias" onclick="showView('ferias')">🏖️ Férias</div>
+  <div class="sb-section">Sistema</div>
+  <div class="nav-item" id="nav-config" onclick="showView('config')">⚙️ Configurações</div>
+  <div class="sb-footer">2 administradoras ativas</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">Escala Mensal</span>
+    <span id="sync-status" style="font-size:11px;color:#15803d;transition:opacity 1s;opacity:0;margin-left:8px;"></span>
+    <div class="topbar-actions" id="topbar-actions">
+      <button class="btn" onclick="importarJSON()" title="Carregar escala salva anteriormente">📂 Importar</button>
+      <button class="btn btn-primary" onclick="exportarJSON()" title="Salvar escala como arquivo JSON">💾 Exportar</button>
+      <button class="btn btn-primary" onclick="salvarNuvem ? salvarNuvem() : showToast('Aguarde...')">☁️ Salvar na nuvem</button>
+      <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
+      <button class="btn" onclick="showToast('Abrindo WhatsApp...')">💬 WhatsApp</button>
+      <input type="file" id="import-input" accept=".json" style="display:none;" onchange="carregarJSON(this)">
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- ESCALA -->
+    <div class="view active" id="view-escala">
+      <div class="print-header"><h2>EscalaMed — InCor HCFMUSP</h2><p id="print-sub"></p></div>
+      <div class="sum-grid no-print">
+        <div class="sum-card"><div class="lbl">Médicos</div><div class="val">29</div><div class="sub">grupo completo</div></div>
+        <div class="sum-card"><div class="lbl">Períodos vazios</div><div class="val" id="sum-vazios" style="color:#ea580c;">—</div><div class="sub">no mês</div></div>
+        <div class="sum-card"><div class="lbl">Mês</div><div class="val" id="sum-mes" style="font-size:15px;"></div><div class="sub" id="sum-ano"></div></div>
+      </div>
+      <div class="cal-nav-row no-print">
+        <div class="month-nav">
+          <button class="btn-icon" onclick="navMes(-1)">&#8249;</button>
+          <span class="month-label" id="month-label"></span>
+          <button class="btn-icon" onclick="navMes(1)">&#8250;</button>
+        </div>
+        <div class="unit-tabs">
+          <div class="utab active" id="utab-ambas" onclick="setUnit('ambas',this)">REC I + II</div>
+          <div class="utab" id="utab-rec1" onclick="setUnit('rec1',this)">REC I</div>
+          <div class="utab" id="utab-rec2" onclick="setUnit('rec2',this)">REC II</div>
+        </div>
+      </div>
+      <div class="legend no-print">
+        <div class="leg-item"><div class="leg-dot" style="background:#93c5fd;"></div>M · 7h–13h · 6h</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#86efac;"></div>T · 13h–19h · 6h</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#c4b5fd;"></div>N · 19h–7h · 12h</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#fed7aa;border:1px solid #f97316;"></div>Vazio</div>
+      </div>
+      <div id="cal-container"></div>
+    </div>
+
+    <!-- ALERTAS -->
+    <div class="view" id="view-alertas"><div id="alertas-container"></div></div>
+
+    <!-- MÉDICOS -->
+    <div class="view" id="view-medicos">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="search-box" style="margin-bottom:0;">🔍 <input type="text" placeholder="Buscar médico..." oninput="filtrarMed(this.value)" id="med-search"></div>
+        <button class="btn btn-primary" onclick="abrirModalNovoMed()">+ Novo médico</button>
+      </div>
+      <div id="med-count" style="font-size:11px;color:#888;margin-bottom:10px;"></div>
+      <div class="med-list" id="med-list"></div>
+    </div>
+
+    <!-- CARGA -->
+    <div class="view" id="view-carga">
+      <div style="overflow-x:auto;"><table class="carga-table">
+        <thead><tr><th>Médico</th><th>Plantões</th><th>Horas</th><th>Meta</th><th>Progresso</th><th>Status</th></tr></thead>
+        <tbody id="carga-body"></tbody>
+      </table></div>
+    </div>
+
+    <!-- REL FDS -->
+    <div class="view" id="view-fds">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:500;">Relatório — Finais de Semana</div>
+          <div style="font-size:11px;color:#888;margin-top:2px;" id="fds-periodo"></div>
+        </div>
+        <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
+      </div>
+      <div id="fds-resumo" style="margin-bottom:12px;"></div>
+      <div style="overflow-x:auto;"><table class="rel-table">
+        <thead><tr><th>Médico</th><th style="text-align:center;">Turnos FDS</th><th style="text-align:center;">Total horas</th><th>Dias escalados</th><th>Status</th></tr></thead>
+        <tbody id="fds-body"></tbody>
+      </table></div>
+    </div>
+
+    <!-- FÉRIAS -->
+    <div class="view" id="view-ferias">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:#111;">Férias — <span id="ferias-mes-label"></span></div>
+          <div style="font-size:11px;color:#888;margin-top:2px;">Médicos de férias ficam bloqueados na escala</div>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModalFerias(null)">+ Cadastrar férias</button>
+      </div>
+      <div id="ferias-resumo" style="margin-bottom:12px;"></div>
+      <div class="ferias-list" id="ferias-list"></div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="view" id="view-config">
+      <div class="cfg-block">
+        <div class="cfg-title">Unidades</div>
+        <div class="form-group"><label class="form-label">REC I</label><input class="form-control" value="Recuperação Pós-Cirúrgica I"></div>
+        <div class="form-group"><label class="form-label">REC II</label><input class="form-control" value="Recuperação Pós-Cirúrgica II"></div>
+      </div>
+      <div class="cfg-block">
+        <div class="cfg-title">Finais de Semana</div>
+        <div style="font-size:12px;color:#666;">Carga completa de FDS = 48h (M+T+N em cada sábado e domingo). O relatório classifica automaticamente: <strong>Sem FDS</strong>, <strong>Parcial</strong> e <strong>Completo</strong>.</div>
+      </div>
+      <div class="cfg-block">
+        <div class="cfg-title">Administradoras</div>
+        <div style="font-size:12px;color:#666;margin-bottom:4px;">ana@incor.usp.br</div>
+        <div style="font-size:12px;color:#666;">admin2@incor.usp.br</div>
+      </div>
+      <button class="btn btn-primary" onclick="showToast('Configurações salvas!')">Salvar configurações</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL NOVO MÉDICO -->
+<div class="modal-overlay" id="modal-novo-med" onclick="if(event.target===this)fecharModalNovoMed()">
+  <div class="modal" onclick="event.stopPropagation()" style="width:380px;">
+    <div class="modal-title" id="novo-med-title">+ Novo médico</div>
+    <div class="modal-sub" id="novo-med-sub">Preencha os dados do médico</div>
+
+    <label class="form-label" style="font-size:11px;color:#666;display:block;margin-bottom:4px;">Nome completo <span style="color:#dc2626;">*</span></label>
+    <input type="text" class="form-control" id="novo-med-nome" placeholder="Ex: João da Silva Pereira" style="margin-bottom:10px;" oninput="previewCurto()">
+
+    <label class="form-label" style="font-size:11px;color:#666;display:block;margin-bottom:4px;">Nome curto (aparece na escala) <span style="color:#dc2626;">*</span></label>
+    <input type="text" class="form-control" id="novo-med-curto" placeholder="Ex: João Silva" style="margin-bottom:10px;">
+
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#333;cursor:pointer;">
+        <input type="checkbox" id="novo-med-quinzenal"> Escala quinzenal ★
+      </label>
+    </div>
+
+    <div id="novo-med-erro" style="display:none;background:#fee2e2;border:0.5px solid #fca5a5;color:#991b1b;font-size:11px;padding:7px 10px;border-radius:6px;margin-bottom:10px;"></div>
+
+    <div class="modal-footer">
+      <button class="btn" id="novo-med-excluir" onclick="excluirMedico()" style="margin-right:auto;color:#dc2626;border-color:#fca5a5;display:none;">Excluir médico</button>
+      <button class="btn" onclick="fecharModalNovoMed()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarNovoMed()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FÉRIAS -->
+<div class="modal-overlay" id="modal-ferias" onclick="if(event.target===this)fecharModalFerias()">
+  <div class="modal" onclick="event.stopPropagation()" style="width:360px;">
+    <div class="modal-title">🏖️ Cadastrar / Editar Férias</div>
+    <div class="modal-sub">O médico ficará bloqueado na escala durante o período</div>
+    <label class="form-label" style="font-size:11px;color:#666;display:block;margin-bottom:4px;">Médico</label>
+    <select class="form-control" id="ferias-sel-med" style="margin-bottom:12px;"></select>
+    <label class="form-label" style="font-size:11px;color:#666;display:block;margin-bottom:4px;">Tipo de férias</label>
+    <div style="display:flex;gap:6px;margin-bottom:12px;" id="ferias-tipo-btns">
+      <button class="btn" id="ftipo-30" onclick="selFeriasTipo(30,this)" style="flex:1;">30 dias</button>
+      <button class="btn" id="ftipo-20" onclick="selFeriasTipo(20,this)" style="flex:1;">20 dias</button>
+      <button class="btn" id="ftipo-15" onclick="selFeriasTipo(15,this)" style="flex:1;">15 dias</button>
+    </div>
+    <label class="form-label" style="font-size:11px;color:#666;display:block;margin-bottom:4px;">Data de início</label>
+    <input type="date" class="form-control" id="ferias-inicio" style="margin-bottom:4px;" oninput="calcFeriasPreview()">
+    <div id="ferias-preview" style="font-size:11px;color:#888;margin-bottom:12px;min-height:18px;"></div>
+    <div class="modal-footer">
+      <button class="btn" id="ferias-remover-btn" onclick="removerFerias()" style="margin-right:auto;display:none;color:#dc2626;border-color:#fca5a5;">Remover férias</button>
+      <button class="btn" onclick="fecharModalFerias()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarFerias()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRINCIPAL -->
+<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modal-title">Escalar médico</div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <label class="form-label" style="font-size:11px;color:#666;display:block;margin-bottom:5px;">Médico</label>
+    <select class="form-control" id="sel-med"></select>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmar()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
+
+<script>
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const TURNOS=['M','T','N'];
+const TH={M:6,T:6,N:12};
+
+// Horas reais considerando regras de FDS e noturno
+function horasReais(turno, diaNum){
+  // Final de semana (sáb=6, dom=0): M+T+N no mesmo dia = 24h
+  // Mas calculamos por turno individualmente, então:
+  // No FDS, M vale 6h, T vale 6h, N vale 12h (total 24h se fizer os 3)
+  // Na prática o enunciado diz: "quando aparecer M, T e N no FDS = 24h"
+  // Interpretamos como: cada turno tem seu valor, mas N sempre = 12h
+  return TH[turno]; // M=6, T=6, N=12 — já correto
+}
+
+// Para relatório FDS: se médico fez M+T+N no mesmo dia FDS, conta 24h (não 6+6+12=24, já bate)
+// O ponto principal é N=12h sempre, o que já está correto.
+// A observação "M+T+N no FDS = 24h" já é satisfeita por 6+6+12=24.
+const META=96;
+const AV_BG=['#bfdbfe','#bbf7d0','#e9d5ff','#fed7aa','#fde68a','#fecaca','#bae6fd','#d9f99d','#fbcfe8','#a5f3fc'];
+const AV_FG=['#1e40af','#15803d','#6b21a8','#9a3412','#854d0e','#991b1b','#075985','#3f6212','#9d174d','#155e75'];
+
+const MEDICOS=[
+  {id:1,nome:'Ana Carolina Jardim Pereira',curto:'Ana Carolina'},
+  {id:2,nome:'Aretusa Chediak Roquim',curto:'Aretusa'},
+  {id:3,nome:'Cícero Mendes',curto:'Cícero'},
+  {id:4,nome:'Delmar Airton Alves Candeiro Junior',curto:'Delmar'},
+  {id:5,nome:'Eduardo Fratari Paes Leme',curto:'Eduardo'},
+  {id:6,nome:'Fabian Martins',curto:'Fabian'},
+  {id:7,nome:'Fabrizio Urbinati Maroja',curto:'Fabrizio'},
+  {id:8,nome:'Gabriel Barros Aulicino',curto:'Gabriel'},
+  {id:9,nome:'Jorge Luis Monteiro Ribeiro',curto:'Jorge'},
+  {id:10,nome:'Jonathan Augusto Venceslau Lima',curto:'Jonathan'},
+  {id:11,nome:'Jose de Lima Oliveira Junior',curto:'Jose'},
+  {id:12,nome:'Juan David Tovas Velásquez',curto:'Juan'},
+  {id:13,nome:'Lethicia Castro Silva Nunes Pires',curto:'Lethicia',quinzenal:true},
+  {id:14,nome:'Luiz Carlos',curto:'Luiz C.'},
+  {id:15,nome:'Luiz Fernando Baldino Lopez',curto:'Luiz F.'},
+  {id:16,nome:'Marcella Andrade Barros',curto:'Marcella'},
+  {id:17,nome:'Maria Alice Estrada Gaiane',curto:'Maria Alice'},
+  {id:18,nome:'Miguel Cenacchi Garcia Pereira',curto:'Miguel'},
+  {id:19,nome:'Mirian Yukiko Chigutti',curto:'Mirian'},
+  {id:20,nome:'Mônica Maria Cartocci',curto:'Mônica'},
+  {id:21,nome:'Raissa Marianna Viana Diniz',curto:'Raissa'},
+  {id:22,nome:'Raphaela de Oliveira Rodrigues',curto:'Raphaela'},
+  {id:23,nome:'Raquel',curto:'Raquel'},
+  {id:24,nome:'Roberta Iki Mochiduky',curto:'Roberta'},
+  {id:25,nome:'Santiago Andres Castro Vintimilla',curto:'Santiago'},
+  {id:26,nome:'Sandro Pereira Vasconcelos Amorim',curto:'Sandro'},
+  {id:27,nome:'Solimar Miranda Grande',curto:'Solimar'},
+  {id:28,nome:'Thalita Hayashi Sereni',curto:'Thalita'},
+  {id:29,nome:'Vanina Leyton Pozzo',curto:'Vanina'},
+];
+
+const GR1=['Médico 1','Médico 2'];
+const GR2=['Mód. 1','Mód. 2','Mód. 3','Mód. 4'];
+
+// escala[unit][grupo][turno][dkey] = medico_id | null
+let escala={rec1:{},rec2:{}};
+GR1.forEach(g=>{escala.rec1[g]={M:{},T:{},N:{}};});
+GR2.forEach(g=>{escala.rec2[g]={M:{},T:{},N:{}};});
+
+let mes=5,ano=2025,uv='ambas',pendCtx=null;
+
+function dkey(d){return `${ano}-${mes}-${d}`;}
+function diasMes(){return new Date(ano,mes+1,0).getDate();}
+function isHoje(d){const h=new Date();return d===h.getDate()&&mes===h.getMonth()&&ano===h.getFullYear();}
+function isWk(d){const dw=new Date(ano,mes,d).getDay();return dw===0||dw===6;}
+
+// ---- VIEWS ----
+function showView(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.getElementById('nav-'+v).classList.add('active');
+  const titles={escala:'Escala Mensal',medicos:'Médicos',alertas:'Alertas de Períodos Vazios',carga:'Carga Horária',fds:'Relatório — Finais de Semana',ferias:'Férias',config:'Configurações'};
+  document.getElementById('topbar-title').textContent=titles[v]||v;
+  document.getElementById('topbar-actions').style.display=v==='escala'?'flex':'none';
+  if(v==='medicos'){renderMed(MEDICOS);}
+  if(v==='carga'){renderCarga();}
+  if(v==='alertas'){renderAlertas();}
+  if(v==='fds'){renderFds();}
+  if(v==='ferias'){renderFerias();}
+}
+
+// ---- NAVEGAÇÃO ----
+function navMes(dir){
+  mes+=dir;
+  if(mes>11){mes=0;ano++;}
+  else if(mes<0){mes=11;ano--;}
+  renderEscala();
+  if(window.carregarNuvem) window.carregarNuvem(mes,ano).then(()=>{ if(window.escutarNuvem) window.escutarNuvem(); });
+}
+function setUnit(v,el){uv=v;document.querySelectorAll('.utab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderEscala();}
+
+// ---- ESCALA ----
+function renderEscala(){
+  document.getElementById('month-label').textContent=MESES[mes]+' '+ano;
+  document.getElementById('sum-mes').textContent=MESES[mes].slice(0,3);
+  document.getElementById('sum-ano').textContent=ano;
+  document.getElementById('print-sub').textContent=MESES[mes]+' '+ano+' · REC I e REC II';
+  let html='';
+  if(uv==='ambas'||uv==='rec1') html+=buildUnit('rec1');
+  if(uv==='ambas'||uv==='rec2') html+=buildUnit('rec2');
+  document.getElementById('cal-container').innerHTML=html;
+  updateAlertas();
+}
+
+function buildUnit(unit){
+  const isR1=unit==='rec1';
+  const grupos=isR1?GR1:GR2;
+  const title=isR1?'REC I — Recuperação Pós-Cirúrgica I':'REC II — Recuperação Pós-Cirúrgica II';
+  const badge=isR1?'Médico 1 e Médico 2':'Mód. 1 a Mód. 4';
+  const total=diasMes();
+  const days=[];for(let d=1;d<=total;d++)days.push(d);
+
+  let h=`<div style="margin-bottom:16px;">`;
+  h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+    <span style="font-size:11px;font-weight:500;color:#111;">${title}</span>
+    <span style="font-size:10px;padding:2px 9px;border-radius:20px;background:#dbeafe;color:#1e40af;">${badge}</span>
+  </div>`;
+  h+=`<div class="tbl-wrap"><table class="cal">`;
+
+  // THEAD
+  h+=`<thead><tr>`;
+  h+=`<th class="th-label-grupo">Grupo</th>`;
+  h+=`<th class="th-label-turno">T</th>`;
+  days.forEach(d=>{
+    const wk=isWk(d);const hj=isHoje(d);
+    h+=`<th class="${wk?'wk':''}${hj?' today-col':''}">
+      <span class="dn">${DS[new Date(ano,mes,d).getDay()]}</span>
+      <span class="dd">${d}</span>
+    </th>`;
+  });
+  h+=`</tr></thead><tbody>`;
+
+  grupos.forEach((grupo)=>{
+    TURNOS.forEach((turno,ti)=>{
+      const isLast=ti===2;
+      h+=`<tr class="${isLast?'row-sep':''}">`;
+      if(ti===0){
+        h+=`<td class="td-grupo" rowspan="3" style="vertical-align:top;padding-top:6px;">
+          <div class="row-group-lbl">${grupo}</div>
+        </td>`;
+      }
+      h+=`<td class="td-turno"><span class="turno-tag tt-${turno}">${turno}</span></td>`;
+      days.forEach(d=>{
+        const k=dkey(d);
+        const wk=isWk(d);const hj=isHoje(d);
+        const mid=escala[unit][grupo][turno][k]||null;
+        const med=mid?MEDICOS.find(x=>x.id===mid):null;
+        const medicosFeriasHoje=feriasNoDia(d);
+        const vazio=!mid;
+        const ci=med?(med.id-1)%10:0;
+        // Célula de férias: quando o médico escalado está de férias nesse dia
+        const medEmFerias=mid&&medicosFeriasHoje.includes(mid);
+        h+=`<td class="${wk?'wk':''}${vazio&&medicosFeriasHoje.length===0?' vazio-cell':''}${medEmFerias?' ferias-cell':''}">`;
+        h+=`<button class="cell-btn${hj?' today-cell':''}" onclick="openModal('${unit}','${grupo}','${turno}',${d})" title="${grupo} · Turno ${turno} · Dia ${d}">`;
+        if(med){
+          if(medEmFerias){
+            h+=`<div class="ferias-pill" title="${med.nome} está de férias nesse dia">🏖️ Férias</div>`;
+          } else {
+            h+=`<div class="nome-pill" style="background:${AV_BG[ci]};color:${AV_FG[ci]};" onclick="event.stopPropagation();openModal('${unit}','${grupo}','${turno}',${d})" title="Clique para alterar ou remover">
+              <span class="rm-tooltip">Clique para editar/remover</span>
+              <span class="nm">${med.curto}</span>
+            </div>`;
+          }
+        } else {
+          h+=`<div class="empty-ind" title="Vazio"></div>`;
+        }
+        h+=`</button></td>`;
+      });
+      h+=`</tr>`;
+    });
+  });
+
+  h+=`</tbody></table></div></div>`;
+  return h;
+}
+
+// ---- MODAL ----
+function openModal(unit,grupo,turno,dia){
+  pendCtx={unit,grupo,turno,dia,k:dkey(dia)};
+  const uLabel=unit==='rec1'?'REC I':'REC II';
+  const dw=DS[new Date(ano,mes,dia).getDay()];
+  const hor=turno==='M'?'7h–13h':turno==='T'?'13h–19h':'19h–7h';
+  const jaTemMed = escala[unit][grupo][turno][dkey(dia)];
+  document.getElementById('modal-title').textContent=`${uLabel} · ${grupo} · Turno ${turno}`;
+  document.getElementById('modal-sub').textContent=jaTemMed
+    ? `${dw}, ${dia} de ${MESES[mes]} · ${hor} · Selecione "— Remover —" para apagar`
+    : `${dw}, ${dia} de ${MESES[mes]} de ${ano}  ·  ${hor}`;
+  const sel=document.getElementById('sel-med');
+  const medicosFeriasNoDia=feriasNoDia(dia);
+  sel.innerHTML=`<option value="">— Remover médico —</option>`
+    +MEDICOS.map(m=>{
+      const estaDeFerias=medicosFeriasNoDia.includes(m.id);
+      const disabled=estaDeFerias?' disabled style="color:#ccc;"':'';
+      const label=m.nome+(m.quinzenal?' ★ quinzenal':'')+(estaDeFerias?' 🏖️ Férias':'');
+      return `<option value="${m.id}"${disabled}>${label}</option>`;
+    }).join('');
+  const atual=escala[unit][grupo][turno][dkey(dia)];
+  if(atual) sel.value=atual;
+  document.getElementById('modal').classList.add('open');
+  setTimeout(()=>sel.focus(),80);
+}
+function handleOverlayClick(e){if(e.target===document.getElementById('modal'))closeModal();}
+function closeModal(){document.getElementById('modal').classList.remove('open');pendCtx=null;}
+function confirmar(){
+  if(!pendCtx)return;
+  const val=document.getElementById('sel-med').value;
+  const mid=val?parseInt(val):null;
+  escala[pendCtx.unit][pendCtx.grupo][pendCtx.turno][pendCtx.k]=mid;
+  closeModal();renderEscala();
+  if(window.salvarNuvem) window.salvarNuvem();
+  if(mid){const m=MEDICOS.find(x=>x.id===mid);showToast(m.curto+' escalado — '+pendCtx.grupo+' · '+pendCtx.turno);}
+  else showToast('Plantão removido');
+}
+function remover(unit,grupo,turno,k){
+  escala[unit][grupo][turno][k]=null;
+  renderEscala();showToast('Plantão removido');
+  if(window.salvarNuvem) window.salvarNuvem();
+}
+
+// ---- ALERTAS ----
+function calcVazios(){
+  const total=diasMes();const v=[];
+  for(let d=1;d<=total;d++){
+    const k=dkey(d);
+    GR1.forEach(g=>{TURNOS.forEach(t=>{if(!escala.rec1[g][t][k])v.push({unit:'rec1',grupo:g,turno:t,dia:d,wk:isWk(d)});});});
+    GR2.forEach(g=>{TURNOS.forEach(t=>{if(!escala.rec2[g][t][k])v.push({unit:'rec2',grupo:g,turno:t,dia:d,wk:isWk(d)});});});
+  }
+  return v;
+}
+function updateAlertas(){
+  const v=calcVazios();
+  const badge=document.getElementById('badge-alertas');
+  badge.textContent=v.length;
+  badge.style.background=v.length===0?'#16a34a':'#dc2626';
+  document.getElementById('sum-vazios').textContent=v.length;
+  document.getElementById('sum-vazios').style.color=v.length===0?'#16a34a':'#ea580c';
+}
+function renderAlertas(){
+  const v=calcVazios();
+  const fds=v.filter(x=>x.wk);const ut=v.filter(x=>!x.wk);
+  let h='';
+  if(v.length===0){h=`<div class="alert-banner alert-ok">✅ Todos os períodos de ${MESES[mes]} ${ano} estão preenchidos!</div>`;}
+  else{
+    h=`<div class="alert-banner alert-warn">⚠️ <strong>${v.length} períodos sem médico</strong> em ${MESES[mes]} ${ano}</div>`;
+    if(fds.length){
+      h+=`<div style="font-size:11px;font-weight:500;color:#991b1b;margin:10px 0 5px;">🔴 Finais de semana — ${fds.length} períodos</div>`;
+      fds.forEach(x=>{
+        const dw=DS[new Date(ano,mes,x.dia).getDay()];
+        h+=`<div class="alert-item fds" onclick="showView('escala');setTimeout(()=>openModal('${x.unit}','${x.grupo}','${x.turno}',${x.dia}),120)">
+          <strong>${x.unit==='rec1'?'REC I':'REC II'} · ${x.grupo} · Turno ${x.turno}</strong>
+          · ${dw} ${x.dia}/${mes+1}
+          <span style="margin-left:auto;font-size:10px;text-decoration:underline;">→ Escalar</span>
+        </div>`;
+      });
+    }
+    if(ut.length){
+      h+=`<div style="font-size:11px;font-weight:500;color:#1e40af;margin:10px 0 5px;">🔵 Dias úteis — ${ut.length} períodos</div>`;
+      ut.forEach(x=>{
+        const dw=DS[new Date(ano,mes,x.dia).getDay()];
+        h+=`<div class="alert-item util" onclick="showView('escala');setTimeout(()=>openModal('${x.unit}','${x.grupo}','${x.turno}',${x.dia}),120)">
+          <strong>${x.unit==='rec1'?'REC I':'REC II'} · ${x.grupo} · Turno ${x.turno}</strong>
+          · ${dw} ${x.dia}/${mes+1}
+          <span style="margin-left:auto;font-size:10px;text-decoration:underline;">→ Escalar</span>
+        </div>`;
+      });
+    }
+  }
+  document.getElementById('alertas-container').innerHTML=h;
+}
+
+// ---- MÉDICOS ----
+let novoMedEditandoId = null;
+
+function renderMed(lista){
+  const count = document.getElementById('med-count');
+  if(count) count.textContent = lista.length + ' médico(s) encontrado(s)';
+  document.getElementById('med-list').innerHTML=lista.map((m,i)=>{
+    const ci=(m.id-1)%10;
+    const ini=m.nome.split(' ').filter(p=>p.length>2).slice(0,2).map(p=>p[0]).join('');
+    return `<div class="med-card">
+      <div class="avatar" style="background:${AV_BG[ci]};color:${AV_FG[ci]};">${ini}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="med-name">${m.nome}</div>
+        <div class="med-sub">InCor · REC${m.quinzenal?' · ★ Quinzenal':''}</div>
+      </div>
+      <span class="stat-badge ${m.quinzenal?'badge-q':'badge-ok'}">${m.quinzenal?'Quinzenal':'Ativo'}</span>
+      <button class="btn btn-edit" onclick="abrirModalEditarMed(${m.id})" style="padding:4px 10px;font-size:11px;margin-left:6px;">Editar</button>
+    </div>`;
+  }).join('');
+}
+function filtrarMed(q){
+  const lista=MEDICOS.filter(m=>m.nome.toLowerCase().includes(q.toLowerCase()));
+  renderMed(lista);
+}
+
+function abrirModalNovoMed(){
+  novoMedEditandoId=null;
+  document.getElementById('novo-med-title').textContent='+ Novo médico';
+  document.getElementById('novo-med-sub').textContent='Preencha os dados do médico';
+  document.getElementById('novo-med-nome').value='';
+  document.getElementById('novo-med-curto').value='';
+  document.getElementById('novo-med-quinzenal').checked=false;
+  document.getElementById('novo-med-erro').style.display='none';
+  document.getElementById('novo-med-excluir').style.display='none';
+  document.getElementById('modal-novo-med').classList.add('open');
+  setTimeout(()=>document.getElementById('novo-med-nome').focus(),80);
+}
+
+function abrirModalEditarMed(id){
+  const m=MEDICOS.find(x=>x.id===id);
+  if(!m) return;
+  novoMedEditandoId=id;
+  document.getElementById('novo-med-title').textContent='Editar médico';
+  document.getElementById('novo-med-sub').textContent='Altere os dados do médico';
+  document.getElementById('novo-med-nome').value=m.nome;
+  document.getElementById('novo-med-curto').value=m.curto.replace(' ★','');
+  document.getElementById('novo-med-quinzenal').checked=!!m.quinzenal;
+  document.getElementById('novo-med-erro').style.display='none';
+  document.getElementById('novo-med-excluir').style.display='block';
+  document.getElementById('modal-novo-med').classList.add('open');
+  setTimeout(()=>document.getElementById('novo-med-nome').focus(),80);
+}
+
+function fecharModalNovoMed(){
+  document.getElementById('modal-novo-med').classList.remove('open');
+  novoMedEditandoId=null;
+}
+
+function gerarNomeCurto(nome){
+  const n=nome.trim();
+  const up=n.toUpperCase();
+  // Exceções de iniciais
+  if(up.startsWith('LUIZ CARLOS')) return 'Luiz C.';
+  if(up.startsWith('LUIZ FERNANDO')) return 'Luiz F.';
+  if(up.startsWith('LUIS PAULO')) return 'Luis P.';
+  // Nomes compostos — abreviação do primeiro
+  if(up.startsWith('MARIA ALICE')) return 'M. Alice';
+  if(up.startsWith('ANA CAROLINA')) return 'Ana Carolina';
+  // Regra geral: primeiro nome completo
+  const partes=n.split(' ').filter(p=>p.length>0);
+  return partes[0]||n;
+}
+
+function previewCurto(){
+  const nome=document.getElementById('novo-med-nome').value.trim();
+  const curtoEl=document.getElementById('novo-med-curto');
+  if(!curtoEl.value||curtoEl.dataset.autogerado==='1'){
+    curtoEl.value=gerarNomeCurto(nome);
+    curtoEl.dataset.autogerado='1';
+  }
+}
+
+function salvarNovoMed(){
+  const nome=document.getElementById('novo-med-nome').value.trim();
+  let curto=document.getElementById('novo-med-curto').value.trim();
+  const quinzenal=document.getElementById('novo-med-quinzenal').checked;
+  const erroEl=document.getElementById('novo-med-erro');
+
+  if(!nome){erroEl.textContent='Nome completo é obrigatório.';erroEl.style.display='block';return;}
+  if(!curto){curto=nome.split(' ')[0];}
+
+  if(novoMedEditandoId){
+    // Editar existente
+    const idx=MEDICOS.findIndex(x=>x.id===novoMedEditandoId);
+    if(idx>=0){
+      MEDICOS[idx].nome=nome;
+      MEDICOS[idx].curto=curto+(quinzenal?' ★':'');
+      MEDICOS[idx].quinzenal=quinzenal||undefined;
+    }
+    fecharModalNovoMed();
+    renderMed(MEDICOS);
+    renderEscala();
+    showToast('Médico atualizado: '+curto);
+    if(window.salvarNuvem) window.salvarNuvem();
+  } else {
+    // Novo
+    const novoId=Math.max(...MEDICOS.map(x=>x.id))+1;
+    const novoMed={id:novoId,nome,curto:curto+(quinzenal?' ★':'')};
+    if(quinzenal) novoMed.quinzenal=true;
+    MEDICOS.push(novoMed);
+    fecharModalNovoMed();
+    renderMed(MEDICOS);
+    renderEscala();
+    showToast('Médico adicionado: '+curto+' (ID '+novoId+')');
+    if(window.salvarNuvem) window.salvarNuvem();
+  }
+}
+
+function excluirMedico(){
+  if(!novoMedEditandoId) return;
+  const m=MEDICOS.find(x=>x.id===novoMedEditandoId);
+  if(!m) return;
+  if(!confirm('Excluir '+m.nome+'? Todos os plantões deste médico serão removidos da escala.')) return;
+  // Remove da escala
+  ['rec1','rec2'].forEach(u=>{
+    const gr=u==='rec1'?GR1:GR2;
+    gr.forEach(g=>{TURNOS.forEach(t=>{
+      Object.keys(escala[u][g][t]).forEach(k=>{
+        if(escala[u][g][t][k]===novoMedEditandoId) escala[u][g][t][k]=null;
+      });
+    });});
+  });
+  // Remove das férias
+  delete ferias[novoMedEditandoId];
+  // Remove do array
+  const idx=MEDICOS.findIndex(x=>x.id===novoMedEditandoId);
+  if(idx>=0) MEDICOS.splice(idx,1);
+  fecharModalNovoMed();
+  renderMed(MEDICOS);
+  renderEscala();
+  showToast('Médico removido: '+m.nome);
+}
+
+// ---- CARGA ----
+function renderCarga(){
+  const dados=MEDICOS.map(m=>{
+    let h=0,p=0;
+    const total=diasMes();
+    for(let d=1;d<=total;d++){
+      const k=dkey(d);
+      // Deduplica por (dia, turno) — evita contar 2x se médico está em 2 slots no mesmo turno
+      const turnosNoDia=new Set();
+      ['rec1','rec2'].forEach(u=>{
+        const gr=u==='rec1'?GR1:GR2;
+        gr.forEach(g=>{
+          TURNOS.forEach(t=>{
+            if(escala[u][g][t][k]===m.id) turnosNoDia.add(t);
+          });
+        });
+      });
+      turnosNoDia.forEach(t=>{h+=TH[t];p++;});
+    }
+    return{...m,h,p};
+  });
+  document.getElementById('carga-body').innerHTML=dados.map(m=>{
+    const pct=Math.min(100,m.h>0?Math.round(m.h/META*100):0);
+    const cor=m.h>=META?'#16a34a':m.h>0?'#ea580c':'#d1d5db';
+    const st=m.h>=META?'<span class="badge-ok2">OK</span>':m.h>0?'<span class="badge-parc">Incompleto</span>':'<span class="badge-zero">Sem plantão</span>';
+    return `<tr class="${m.h<META?'inc':''}">
+      <td>${m.nome}${m.quinzenal?' <span style="font-size:10px;color:#854d0e;">★</span>':''}</td>
+      <td style="text-align:center;">${m.p}</td>
+      <td style="text-align:center;font-weight:500;">${m.h}h</td>
+      <td style="text-align:center;color:#888;">${META}h</td>
+      <td><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${cor};"></div></div> <span style="font-size:10px;color:#888;">${pct}%</span></td>
+      <td>${st}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ---- REL FDS ----
+function calcFds(mid){
+  const total=diasMes();let h=0,p=0;
+  for(let d=1;d<=total;d++){
+    if(!isWk(d))continue;
+    const k=dkey(d);
+    // Deduplica: conta cada (turno) apenas uma vez por dia,
+    // independente de quantos slots/módulos o médico aparece
+    const turnosNoDia=new Set();
+    ['rec1','rec2'].forEach(u=>{
+      const gr=u==='rec1'?GR1:GR2;
+      gr.forEach(g=>{
+        TURNOS.forEach(t=>{
+          if(escala[u][g][t][k]===mid) turnosNoDia.add(t);
+        });
+      });
+    });
+    turnosNoDia.forEach(t=>{h+=TH[t];p++;});
+  }
+  return{h,p};
+}
+function renderFds(){
+  document.getElementById('fds-periodo').textContent=MESES[mes]+' '+ano;
+
+  // Calcula horas FDS de cada médico (deduplicado por dia+turno)
+  const dados=MEDICOS.map(m=>{
+    const{h,p}=calcFds(m.id);
+    // Classifica
+    let status, cls;
+    if(h===0){status='zero';cls='zero';}
+    else if(h>=48){status='completo';cls='completo';}
+    else{status='parcial';cls='parcial';}
+    return{...m,h,p,status,cls};
+  }).sort((a,b)=>{
+    // Ordena: zero primeiro, depois parcial, depois completo
+    const ord={zero:0,parcial:1,completo:2};
+    return ord[a.status]-ord[b.status]||a.nome.localeCompare(b.nome);
+  });
+
+  const zeros    = dados.filter(m=>m.status==='zero');
+  const parciais = dados.filter(m=>m.status==='parcial');
+  const completos= dados.filter(m=>m.status==='completo');
+
+  // Resumo em cards
+  document.getElementById('fds-resumo').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+      <div style="background:#fff0f0;border:0.5px solid #fca5a5;border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:22px;font-weight:600;color:#dc2626;">${zeros.length}</div>
+        <div style="font-size:11px;color:#991b1b;margin-top:2px;">🔴 Sem FDS</div>
+      </div>
+      <div style="background:#fff7ed;border:0.5px solid #fdba74;border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:22px;font-weight:600;color:#ea580c;">${parciais.length}</div>
+        <div style="font-size:11px;color:#9a3412;margin-top:2px;">🟠 Parcial</div>
+      </div>
+      <div style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:22px;font-weight:600;color:#16a34a;">${completos.length}</div>
+        <div style="font-size:11px;color:#15803d;margin-top:2px;">🟢 Carga completa (48h)</div>
+      </div>
+    </div>`;
+
+  // Tabela
+  document.getElementById('fds-body').innerHTML=dados.map(m=>{
+    let rowBg='';
+    if(m.status==='zero') rowBg='background:#fff8f8;';
+    else if(m.status==='parcial') rowBg='background:#fffbf5;';
+
+    let stBadge='';
+    if(m.status==='zero')     stBadge='<span class="badge-zero">Sem FDS</span>';
+    else if(m.status==='parcial')  stBadge='<span class="badge-parc">Parcial</span>';
+    else                           stBadge='<span class="badge-ok2">Completo</span>';
+
+    // Quais finais de semana está escalado
+    const fdsDetalhes=getFdsDias(m.id);
+
+    return `<tr style="${rowBg}">
+      <td>${m.nome}${m.quinzenal?' <span style="font-size:10px;color:#854d0e;">★</span>':''}</td>
+      <td style="text-align:center;">${m.p}</td>
+      <td style="text-align:center;font-weight:600;color:${m.h===0?'#dc2626':m.h>=48?'#16a34a':'#ea580c'};">${m.h}h</td>
+      <td style="font-size:10px;color:#888;">${fdsDetalhes||'—'}</td>
+      <td>${stBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Retorna string com os FDS em que o médico está escalado
+function getFdsDias(mid){
+  const total=diasMes();
+  const dias=[];
+  const DS2=['D','S','T','Q','Q','S','S'];
+  for(let d=1;d<=total;d++){
+    if(!isWk(d)) continue;
+    const k=dkey(d);
+    const turnos=new Set();
+    ['rec1','rec2'].forEach(u=>{
+      const gr=u==='rec1'?GR1:GR2;
+      gr.forEach(g=>{TURNOS.forEach(t=>{if(escala[u][g][t][k]===mid)turnos.add(t);});});
+    });
+    if(turnos.size>0){
+      const dw=new Date(ano,mes,d).getDay();
+      const label=dw===6?'Sáb':'Dom';
+      dias.push(`${d}/${mes+1} ${label} (${[...turnos].join('+')})`);
+    }
+  }
+  return dias.join(' · ');
+}
+
+
+
+function showToast(msg){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+
+// ---- EXPORTAR / IMPORTAR JSON ----
+function exportarJSON(){
+  const dados={
+    versao:'1.0',
+    exportadoEm: new Date().toLocaleString('pt-BR'),
+    mes, ano,
+    escala,
+    ferias,
+    medicos: MEDICOS
+  };
+  const json=JSON.stringify(dados, null, 2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const nomeMes=MESES[mes].toLowerCase();
+  a.href=url;
+  a.download=`escalamed_${nomeMes}_${ano}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Escala exportada: escalamed_'+nomeMes+'_'+ano+'.json');
+}
+
+function importarJSON(){
+  document.getElementById('import-input').value='';
+  document.getElementById('import-input').click();
+}
+
+function carregarJSON(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const dados=JSON.parse(e.target.result);
+      if(!dados.escala || !dados.mes===undefined || !dados.ano){
+        alert('Arquivo inválido. Use um arquivo exportado pelo EscalaMed.');
+        return;
+      }
+      // Restaura estrutura completa garantindo todos os grupos/turnos
+      escala={rec1:{},rec2:{}};
+      GR1.forEach(g=>{
+        escala.rec1[g]={
+          M: (dados.escala.rec1[g]&&dados.escala.rec1[g].M)||{},
+          T: (dados.escala.rec1[g]&&dados.escala.rec1[g].T)||{},
+          N: (dados.escala.rec1[g]&&dados.escala.rec1[g].N)||{},
+        };
+      });
+      GR2.forEach(g=>{
+        escala.rec2[g]={
+          M: (dados.escala.rec2[g]&&dados.escala.rec2[g].M)||{},
+          T: (dados.escala.rec2[g]&&dados.escala.rec2[g].T)||{},
+          N: (dados.escala.rec2[g]&&dados.escala.rec2[g].N)||{},
+        };
+      });
+      mes=dados.mes;
+      ano=dados.ano;
+      ferias=dados.ferias||{};
+      if(dados.medicos&&Array.isArray(dados.medicos)&&dados.medicos.length>0){
+        MEDICOS.length=0;
+        dados.medicos.forEach(m=>{
+          m.curto=gerarNomeCurto(m.nome)+(m.quinzenal?' ★':'');
+          MEDICOS.push(m);
+        });
+      }
+      // Sincroniza abas visuais
+      document.querySelectorAll('.utab').forEach(t=>t.classList.remove('active'));
+      document.getElementById('utab-ambas').classList.add('active');
+      uv='ambas';
+      renderEscala();
+      showToast('Escala de '+MESES[mes]+' '+ano+' carregada com sucesso!');
+    } catch(err){
+      alert('Erro ao ler o arquivo. Verifique se é um JSON válido exportado pelo EscalaMed.\n\n'+err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ---- FÉRIAS ----
+// ferias = { medico_id: { inicio: 'YYYY-MM-DD', dias: 30 } }
+let ferias = {};
+let feriasTipoSel = 30;
+let feriasEditandoId = null;
+
+function medEstaDeFerias(medId, d) {
+  const f = ferias[medId];
+  if (!f || !f.inicio) return false;
+  const inicio = new Date(f.inicio + 'T00:00:00');
+  const fim = new Date(inicio);
+  fim.setDate(fim.getDate() + f.dias - 1);
+  const dia = new Date(ano, mes, d);
+  return dia >= inicio && dia <= fim;
+}
+
+function feriasNoDia(d) {
+  return Object.entries(ferias).filter(([id, f]) => {
+    if (!f || !f.inicio) return false;
+    const inicio = new Date(f.inicio + 'T00:00:00');
+    const fim = new Date(inicio);
+    fim.setDate(fim.getDate() + f.dias - 1);
+    const dia = new Date(ano, mes, d);
+    return dia >= inicio && dia <= fim;
+  }).map(([id]) => parseInt(id));
+}
+
+function renderFerias() {
+  document.getElementById('ferias-mes-label').textContent = MESES[mes] + ' ' + ano;
+  // Filtra médicos com férias que tocam o mês atual
+  const inicioMes = new Date(ano, mes, 1);
+  const fimMes = new Date(ano, mes + 1, 0);
+  const comFerias = Object.entries(ferias).filter(([id, f]) => {
+    if (!f || !f.inicio) return false;
+    const inicio = new Date(f.inicio + 'T00:00:00');
+    const fim = new Date(inicio);
+    fim.setDate(fim.getDate() + f.dias - 1);
+    return fim >= inicioMes && inicio <= fimMes;
+  });
+  const semFerias = MEDICOS.filter(m => !ferias[m.id] || !ferias[m.id].inicio);
+
+  document.getElementById('ferias-resumo').innerHTML = comFerias.length === 0
+    ? '<div class="alert-banner alert-ok">Nenhum médico de férias em ' + MESES[mes] + ' ' + ano + '</div>'
+    : '<div class="alert-banner" style="background:#fff5fb;border:0.5px solid #f9a8d4;color:#9d174d;">🏖️ <strong>' + comFerias.length + '</strong> médico(s) de férias em ' + MESES[mes] + ' ' + ano + '</div>';
+
+  const list = document.getElementById('ferias-list');
+  let html = '';
+  // Com férias primeiro
+  comFerias.forEach(([id, f]) => {
+    const m = MEDICOS.find(x => x.id === parseInt(id));
+    if (!m) return;
+    const ci = (m.id - 1) % 10;
+    const ini = m.nome.split(' ').filter(p => p.length > 2).slice(0, 2).map(p => p[0]).join('');
+    const dtInicio = new Date(f.inicio + 'T00:00:00');
+    const dtFim = new Date(dtInicio); dtFim.setDate(dtFim.getDate() + f.dias - 1);
+    const fmt = dt => dt.toLocaleDateString('pt-BR');
+    html += `<div class="ferias-card ativo">
+      <div class="avatar" style="background:${AV_BG[ci]};color:${AV_FG[ci]};">${ini}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="med-name">${m.nome}</div>
+        <div class="med-sub">${f.dias} dias · ${fmt(dtInicio)} a ${fmt(dtFim)}</div>
+      </div>
+      <span class="badge-ferias">De férias</span>
+      <button class="btn" onclick="abrirModalFerias(${m.id})" style="padding:4px 10px;font-size:11px;">Editar</button>
+    </div>`;
+  });
+  // Sem férias
+  semFerias.forEach((m, i) => {
+    const ci = (m.id - 1) % 10;
+    const ini = m.nome.split(' ').filter(p => p.length > 2).slice(0, 2).map(p => p[0]).join('');
+    html += `<div class="ferias-card">
+      <div class="avatar" style="background:${AV_BG[ci]};color:${AV_FG[ci]};">${ini}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="med-name">${m.nome}</div>
+        <div class="med-sub" style="color:#aaa;">Sem férias cadastradas</div>
+      </div>
+      <span class="badge-inativo">Ativo</span>
+      <button class="btn" onclick="abrirModalFerias(${m.id})" style="padding:4px 10px;font-size:11px;">+ Férias</button>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function abrirModalFerias(medId) {
+  feriasEditandoId = medId;
+  feriasTipoSel = 30;
+  // Popula select de médicos
+  const sel = document.getElementById('ferias-sel-med');
+  sel.innerHTML = MEDICOS.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
+  if (medId) sel.value = medId;
+  // Botões de tipo
+  document.querySelectorAll('#ferias-tipo-btns .btn').forEach(b => b.classList.remove('btn-primary'));
+  document.getElementById('ftipo-30').classList.add('btn-primary');
+  // Preenche dados existentes
+  const f = medId ? ferias[medId] : null;
+  if (f && f.inicio) {
+    feriasTipoSel = f.dias;
+    document.getElementById('ferias-inicio').value = f.inicio;
+    document.querySelectorAll('#ferias-tipo-btns .btn').forEach(b => b.classList.remove('btn-primary'));
+    const btn = document.getElementById('ftipo-' + f.dias);
+    if (btn) btn.classList.add('btn-primary');
+    document.getElementById('ferias-remover-btn').style.display = 'block';
+  } else {
+    document.getElementById('ferias-inicio').value = '';
+    document.getElementById('ferias-remover-btn').style.display = 'none';
+  }
+  calcFeriasPreview();
+  document.getElementById('modal-ferias').classList.add('open');
+}
+
+function fecharModalFerias() {
+  document.getElementById('modal-ferias').classList.remove('open');
+  feriasEditandoId = null;
+}
+
+function selFeriasTipo(dias, el) {
+  feriasTipoSel = dias;
+  document.querySelectorAll('#ferias-tipo-btns .btn').forEach(b => b.classList.remove('btn-primary'));
+  el.classList.add('btn-primary');
+  calcFeriasPreview();
+}
+
+function calcFeriasPreview() {
+  const inicio = document.getElementById('ferias-inicio').value;
+  const prev = document.getElementById('ferias-preview');
+  if (!inicio) { prev.textContent = ''; return; }
+  const dtI = new Date(inicio + 'T00:00:00');
+  const dtF = new Date(dtI); dtF.setDate(dtF.getDate() + feriasTipoSel - 1);
+  prev.innerHTML = '📅 ' + dtI.toLocaleDateString('pt-BR') + ' a ' + dtF.toLocaleDateString('pt-BR') + ' · ' + feriasTipoSel + ' dias';
+}
+
+function salvarFerias() {
+  const medId = parseInt(document.getElementById('ferias-sel-med').value);
+  const inicio = document.getElementById('ferias-inicio').value;
+  if (!inicio) { showToast('Selecione a data de início'); return; }
+  ferias[medId] = { inicio, dias: feriasTipoSel };
+  fecharModalFerias();
+  renderEscala();
+  if (document.getElementById('view-ferias').classList.contains('active')) renderFerias();
+  const m = MEDICOS.find(x => x.id === medId);
+  showToast('Férias de ' + m.curto + ' salvas — ' + feriasTipoSel + ' dias');
+  if(window.salvarNuvem) window.salvarNuvem();
+}
+
+function removerFerias() {
+  const medId = parseInt(document.getElementById('ferias-sel-med').value);
+  delete ferias[medId];
+  fecharModalFerias();
+  renderEscala();
+  if (document.getElementById('view-ferias').classList.contains('active')) renderFerias();
+  const m = MEDICOS.find(x => x.id === medId);
+  showToast('Férias de ' + m.curto + ' removidas');
+}
+
+// ---- DADOS PRÉ-CARREGADOS (junho 2026) ----
+(function(){
+  const dadosIniciais = {
+    mes: 5,
+    ano: 2026,
+    escala: {"rec1": {"Médico 1": {"M": {"2026-5-1": 19, "2026-5-2": 6, "2026-5-3": 8, "2026-5-4": 29, "2026-5-10": 8, "2026-5-11": 8, "2026-5-17": 8, "2026-5-18": 8, "2026-5-24": 8, "2026-5-25": 8, "2026-5-5": 8, "2026-5-12": 8, "2026-5-19": 8, "2026-5-26": 8, "2026-5-8": 19, "2026-5-15": 19, "2026-5-22": 19, "2026-5-29": 19, "2026-5-30": 6, "2026-5-9": 6, "2026-5-16": 6, "2026-5-23": 6, "2026-5-6": 19, "2026-5-14": 8, "2026-5-21": 15, "2026-5-27": 12}, "T": {"2026-5-1": 19, "2026-5-2": 14, "2026-5-8": 19, "2026-5-15": 19, "2026-5-22": 19, "2026-5-29": 19, "2026-5-3": 6, "2026-5-4": 29, "2026-5-5": 8, "2026-5-10": 6, "2026-5-11": 6, "2026-5-12": 8, "2026-5-17": 6, "2026-5-18": 6, "2026-5-19": 8, "2026-5-24": 6, "2026-5-25": 6, "2026-5-26": 8, "2026-5-6": 19, "2026-5-13": 26, "2026-5-21": 15, "2026-5-27": 12, "2026-5-30": 14, "2026-5-9": 14, "2026-5-16": 14, "2026-5-23": 14}, "N": {"2026-5-1": null, "2026-5-2": 12, "2026-5-8": 19, "2026-5-15": 19, "2026-5-22": 19, "2026-5-29": 19, "2026-5-9": 12, "2026-5-16": 12, "2026-5-23": 12, "2026-5-30": 12, "2026-5-24": 15, "2026-5-17": 15, "2026-5-10": 15, "2026-5-3": 15, "2026-5-4": 29, "2026-5-26": 8, "2026-5-11": 13, "2026-5-25": 13, "2026-5-19": 8, "2026-5-12": 8, "2026-5-5": 8, "2026-5-18": 23, "2026-5-6": 19, "2026-5-7": 21, "2026-5-14": 26, "2026-5-20": 22, "2026-5-21": 15, "2026-5-27": 12, "2026-5-28": 26}}, "Médico 2": {"M": {"2026-5-1": null, "2026-5-2": 1, "2026-5-4": 21, "2026-5-5": 21, "2026-5-12": 21, "2026-5-19": 21, "2026-5-26": 21, "2026-5-7": 7, "2026-5-30": 1, "2026-5-9": 1, "2026-5-16": 1, "2026-5-23": 1}, "T": {"2026-5-1": 6, "2026-5-2": 1, "2026-5-8": 6, "2026-5-15": 6, "2026-5-22": 6, "2026-5-3": 11, "2026-5-10": 11, "2026-5-17": 11, "2026-5-24": 11, "2026-5-4": 21, "2026-5-26": 6, "2026-5-19": 6, "2026-5-12": 6, "2026-5-5": 6, "2026-5-30": 1, "2026-5-9": 1, "2026-5-16": 1, "2026-5-23": 1}, "N": {"2026-5-1": 6, "2026-5-2": 27, "2026-5-8": 6, "2026-5-15": 6, "2026-5-22": 6, "2026-5-3": 11, "2026-5-10": 11, "2026-5-17": 11, "2026-5-24": 11, "2026-5-4": 21, "2026-5-26": 26, "2026-5-11": 21, "2026-5-18": 21, "2026-5-25": 21, "2026-5-13": 12, "2026-5-21": 23, "2026-5-27": 27, "2026-5-28": 15, "2026-5-30": 27, "2026-5-5": 26, "2026-5-12": 26, "2026-5-19": 26}}}, "rec2": {"Mód. 1": {"M": {"2026-5-2": 4, "2026-5-3": 2, "2026-5-4": 17, "2026-5-1": 33, "2026-5-8": 33, "2026-5-9": 4, "2026-5-10": 2, "2026-5-11": 17, "2026-5-15": 33, "2026-5-16": 4, "2026-5-17": 2, "2026-5-18": 17, "2026-5-22": 33, "2026-5-23": 4, "2026-5-24": 2, "2026-5-25": 17, "2026-5-29": 33, "2026-5-30": 4, "2026-5-20": 18}, "T": {"2026-5-2": 4, "2026-5-3": 2, "2026-5-4": 17, "2026-5-1": 33, "2026-5-8": 33, "2026-5-9": 4, "2026-5-10": 2, "2026-5-11": 17, "2026-5-15": 33, "2026-5-16": 4, "2026-5-17": 2, "2026-5-18": 17, "2026-5-22": 33, "2026-5-23": 4, "2026-5-24": 2, "2026-5-25": 17, "2026-5-29": 33, "2026-5-30": 4, "2026-5-20": 18}, "N": {"2026-5-2": 18, "2026-5-4": 17, "2026-5-3": 32, "2026-5-10": 33, "2026-5-1": 31, "2026-5-5": 34, "2026-5-8": 30, "2026-5-15": 31, "2026-5-22": 30, "2026-5-29": 31, "2026-5-9": 18, "2026-5-16": 18, "2026-5-23": 18, "2026-5-30": 18, "2026-5-11": 25, "2026-5-18": 25, "2026-5-25": 25, "2026-5-17": 32, "2026-5-24": 33, "2026-5-12": 35, "2026-5-19": 34, "2026-5-26": 35, "2026-5-13": 32, "2026-5-14": 32, "2026-5-20": 18}}, "Mód. 2": {"M": {"2026-5-1": 3, "2026-5-8": 3, "2026-5-15": 3, "2026-5-24": 3, "2026-5-29": 3, "2026-5-22": 3, "2026-5-4": 2, "2026-5-5": 2, "2026-5-12": 2, "2026-5-19": 2, "2026-5-26": 2, "2026-5-2": 2, "2026-5-3": 3, "2026-5-9": 2, "2026-5-10": 3, "2026-5-11": 2, "2026-5-16": 2, "2026-5-17": 3, "2026-5-18": 2, "2026-5-23": 2, "2026-5-25": 2, "2026-5-30": 2, "2026-5-7": 14, "2026-5-13": 23, "2026-5-14": 3, "2026-5-21": 7, "2026-5-27": 20}, "T": {"2026-5-1": 3, "2026-5-8": 3, "2026-5-15": 3, "2026-5-24": 3, "2026-5-29": 3, "2026-5-3": 3, "2026-5-22": 3, "2026-5-4": 23, "2026-5-5": 14, "2026-5-12": null, "2026-5-19": null, "2026-5-26": null, "2026-5-10": 3, "2026-5-17": 3, "2026-5-13": 23, "2026-5-21": 7, "2026-5-27": 20, "2026-5-11": 23, "2026-5-18": 23, "2026-5-25": 23}, "N": {"2026-5-1": 3, "2026-5-8": 3, "2026-5-15": 3, "2026-5-24": 7, "2026-5-29": 3, "2026-5-3": 7, "2026-5-10": 7, "2026-5-17": 7, "2026-5-22": 3, "2026-5-26": 9, "2026-5-19": 9, "2026-5-12": 9, "2026-5-5": 9, "2026-5-4": null, "2026-5-2": 20, "2026-5-9": 20, "2026-5-16": 20, "2026-5-23": 20, "2026-5-30": 20, "2026-5-13": 23, "2026-5-20": 25, "2026-5-21": 7, "2026-5-27": 20, "2026-5-28": 9}}, "Mód. 3": {"M": {"2026-5-4": null, "2026-5-1": 17, "2026-5-3": 17, "2026-5-5": 17, "2026-5-8": 17, "2026-5-9": null, "2026-5-10": 17, "2026-5-12": 17, "2026-5-15": 17, "2026-5-17": 17, "2026-5-19": 17, "2026-5-22": 17, "2026-5-24": 17, "2026-5-26": 17, "2026-5-29": 17, "2026-5-7": 24, "2026-5-13": 29, "2026-5-14": 9, "2026-5-20": 16, "2026-5-21": 24, "2026-5-27": 13}, "T": {"2026-5-4": 11, "2026-5-10": 22, "2026-5-17": 22, "2026-5-24": 22, "2026-5-1": 11, "2026-5-8": 11, "2026-5-3": 22, "2026-5-15": 11, "2026-5-22": 11, "2026-5-29": 11, "2026-5-2": 11, "2026-5-5": 11, "2026-5-9": 11, "2026-5-11": 11, "2026-5-12": 11, "2026-5-16": 11, "2026-5-18": 11, "2026-5-19": 11, "2026-5-23": 11, "2026-5-25": 11, "2026-5-26": 11, "2026-5-30": 11, "2026-5-7": 24, "2026-5-13": 29, "2026-5-14": 9, "2026-5-20": 16, "2026-5-21": 24, "2026-5-27": 13}, "N": {"2026-5-10": 22, "2026-5-4": 28, "2026-5-5": 29, "2026-5-12": 10, "2026-5-19": 29, "2026-5-26": 10, "2026-5-17": 22, "2026-5-24": 22, "2026-5-11": 18, "2026-5-18": 28, "2026-5-25": 18, "2026-5-2": 24, "2026-5-9": 24, "2026-5-23": 24, "2026-5-30": 24, "2026-5-1": 11, "2026-5-8": 11, "2026-5-3": 22, "2026-5-15": 11, "2026-5-22": 11, "2026-5-29": 11, "2026-5-7": 24, "2026-5-13": 29, "2026-5-14": 9, "2026-5-20": 16, "2026-5-21": 24, "2026-5-27": 25, "2026-5-28": 13}}, "Mód. 4": {"M": {"2026-5-5": 16, "2026-5-12": 16}, "T": {"2026-5-5": 16, "2026-5-12": 16, "2026-5-3": 23, "2026-5-24": 23, "2026-5-17": 23, "2026-5-10": 23}, "N": {"2026-5-10": 32, "2026-5-24": 32, "2026-5-11": 28, "2026-5-18": 18, "2026-5-25": 28, "2026-5-3": 10, "2026-5-17": 10, "2026-5-5": 10, "2026-5-12": 29, "2026-5-19": 10, "2026-5-26": 29, "2026-5-4": 18, "2026-5-20": 32, "2026-5-21": 32, "2026-5-27": 15}}}},
+    ferias: {},
+    medicos: [{"id": 1, "nome": "Ana Carolina Jardim Pereira", "curto": "Ana Carolina"}, {"id": 2, "nome": "Aretusa Chediak Roquim", "curto": "Aretusa"}, {"id": 3, "nome": "Cícero Mendes", "curto": "Cícero"}, {"id": 4, "nome": "Delmar Airton Alves Candeiro Junior", "curto": "Delmar"}, {"id": 5, "nome": "Eduardo Fratari Paes Leme", "curto": "Eduardo"}, {"id": 6, "nome": "Fabian Martins", "curto": "Fabian"}, {"id": 7, "nome": "Fabrizio Urbinati Maroja", "curto": "Fabrizio"}, {"id": 8, "nome": "Gabriel Barros Aulicino", "curto": "Gabriel"}, {"id": 9, "nome": "Jorge Luis Monteiro Ribeiro", "curto": "Jorge"}, {"id": 10, "nome": "Jonathan Augusto Venceslau Lima", "curto": "Jonathan"}, {"id": 11, "nome": "Jose de Lima Oliveira Junior", "curto": "Jose"}, {"id": 12, "nome": "Juan David Tovas Velásquez", "curto": "Juan"}, {"id": 13, "nome": "Lethicia Castro Silva Nunes Pires", "curto": "Lethicia ★", "quinzenal": true}, {"id": 14, "nome": "Luiz Carlos", "curto": "Luiz C."}, {"id": 15, "nome": "Luiz Fernando Baldino Lopez", "curto": "Luiz F."}, {"id": 16, "nome": "Marcella Andrade Barros", "curto": "Marcella"}, {"id": 17, "nome": "Maria Alice Estrada Gaiane", "curto": "M. Alice"}, {"id": 18, "nome": "Miguel Cenacchi Garcia Pereira", "curto": "Miguel"}, {"id": 19, "nome": "Mirian Yukiko Chigutti", "curto": "Mirian"}, {"id": 20, "nome": "Mônica Maria Cartocci", "curto": "Mônica"}, {"id": 21, "nome": "Raissa Marianna Viana Diniz", "curto": "Raissa"}, {"id": 22, "nome": "Raphaela de Oliveira Rodrigues", "curto": "Raphaela"}, {"id": 23, "nome": "Raquel", "curto": "Raquel"}, {"id": 24, "nome": "Roberta Iki Mochiduky", "curto": "Roberta"}, {"id": 25, "nome": "Santiago Andres Castro Vintimilla", "curto": "Santiago"}, {"id": 26, "nome": "Sandro Pereira Vasconcelos Amorim", "curto": "Sandro"}, {"id": 27, "nome": "Solimar Miranda Grande", "curto": "Solimar"}, {"id": 28, "nome": "Thalita Hayashi Sereni", "curto": "Thalita"}, {"id": 29, "nome": "Vanina Leyton Pozzo", "curto": "Vanina"}, {"id": 30, "nome": "Antônio", "curto": "Antônio"}, {"id": 31, "nome": "Natália", "curto": "Natália"}, {"id": 32, "nome": "Domingos", "curto": "Domingos"}, {"id": 33, "nome": "Gustavo", "curto": "Gustavo"}, {"id": 34, "nome": "Luis Paulo", "curto": "Luis P."}, {"id": 35, "nome": "Rodrigo", "curto": "Rodrigo"}]
+  };
+  // Aplica médicos
+  MEDICOS.length=0;
+  dadosIniciais.medicos.forEach(m=>{
+    m.curto = gerarNomeCurto(m.nome) + (m.quinzenal?' ★':'');
+    MEDICOS.push(m);
+  });
+  // Aplica escala
+  escala={rec1:{},rec2:{}};
+  GR1.forEach(g=>{escala.rec1[g]={M:{},T:{},N:{}};  });
+  GR2.forEach(g=>{escala.rec2[g]={M:{},T:{},N:{}};  });
+  GR1.forEach(g=>{
+    escala.rec1[g].M = dadosIniciais.escala.rec1[g]?.M||{};
+    escala.rec1[g].T = dadosIniciais.escala.rec1[g]?.T||{};
+    escala.rec1[g].N = dadosIniciais.escala.rec1[g]?.N||{};
+  });
+  GR2.forEach(g=>{
+    escala.rec2[g].M = dadosIniciais.escala.rec2[g]?.M||{};
+    escala.rec2[g].T = dadosIniciais.escala.rec2[g]?.T||{};
+    escala.rec2[g].N = dadosIniciais.escala.rec2[g]?.N||{};
+  });
+  // Aplica férias
+  ferias = dadosIniciais.ferias||{};
+  // Aplica mês/ano
+  mes = dadosIniciais.mes;
+  ano = dadosIniciais.ano;
+})();
+
+// ---- INIT ----
+renderEscala();
+renderMed(MEDICOS);
+window.dispatchEvent(new Event('escalamed-ready'));
+</script>
+</body>
+</html>
